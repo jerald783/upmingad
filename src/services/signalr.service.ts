@@ -28,8 +28,10 @@ export class SignalRService {
     // Proxy path — hosted on Vercel
 
 this.hubConnection = new signalR.HubConnectionBuilder()
-  .withUrl('/api/notification')
-  .withAutomaticReconnect()
+  .withUrl('/api/notification', {
+    skipNegotiation: false,
+    transport: signalR.HttpTransportType.WebSockets
+  })
   .build();
 
 
