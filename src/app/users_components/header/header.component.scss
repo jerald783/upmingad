@@ -20,3 +20,14 @@
     transition: background-color 0.2s;
     cursor: pointer;
   }
+nav {
+  visibility: visible;
+  display: block;
+  z-index: 1000;
+}
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
