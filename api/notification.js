@@ -1,45 +1,39 @@
-export const config = {
-  api: {
-    bodyParser: false,
-    externalResolver: true,
-  },
-};
+// /api/notification/[...path].js
 
 import http from 'http';
 import https from 'https';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
 
-const target = 'https://mxcrk7vq-5000.asse.devtunnels.ms/hubs/notification'; // ✅ this is your backend
+export const config = {
+  api: { bodyParser: false, externalResolver: true }
+};
 
 const streamPipeline = promisify(pipeline);
+const target = 'https://mxcrk7vq-5000.asse.devtunnels.ms/hubs/notification';
 
 export default async function handler(req, res) {
-  const url = new URL(target + (req.url?.replace('/api/notification', '') || ''));
+  const [, ...routeParts] = req.url!.split('/');
+  const proxyPath = routeParts.join('/');
+  const url = new URL(target + (proxyPath ? `/${proxyPath}` : '') + (req.url!.includes('?') ? `?${req.url!.split('?')[1]}` : ''));
 
-  const proxyReq = https.request(
-    {
-      hostname: url.hostname,
-      path: url.pathname + url.search,
-      method: req.method,
-      headers: {
-        ...req.headers,
-        host: url.hostname,
-      },
-    },
-    (proxyRes) => {
-      res.writeHead(proxyRes.statusCode || 500, proxyRes.headers);
-      proxyRes.pipe(res);
-    }
-  );
+  const proxyReq = https.request({
+    hostname: url.hostname,
+    path: url.pathname + url.search,
+    method: req.method,
+    headers: { ...req.headers, host: url.hostname },
+  }, proxyRes => {
+    res.writeHead(proxyRes.statusCode || 500, proxyRes.headers);
+    proxyRes.pipe(res);
+  });
 
-  proxyReq.on('error', (err) => {
+  proxyReq.on('error', err => {
     console.error('Proxy error:', err);
     res.statusCode = 500;
     res.end('Proxy error');
   });
 
-  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
     await streamPipeline(req, proxyReq);
   } else {
     proxyReq.end();
