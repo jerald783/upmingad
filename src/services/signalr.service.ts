@@ -25,7 +25,8 @@ export class SignalRService {
   eventDeleted$ = this.eventDeletedSubject.asObservable();
 
   startConnection(): void {
-   const signalRUrl = 'https://upmingad.vercel.app/hubs/notification';
+    // Proxy path — hosted on Vercel
+    const signalRUrl = '/api/notification';
 
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(signalRUrl)
